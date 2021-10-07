@@ -47,6 +47,8 @@ def scrape_congress(congress_yr, bill_ids, db_name):
     # Iterate through all bills for each congress
     for id in bill_ids:
         # Format URL
+        congress_yr = 117
+        id = 91
         url = ("https://congress.gov/bill/{}th-congress"
                "/house-bill/{}/all-info").format(congress_yr, id)
 
@@ -60,12 +62,25 @@ def scrape_congress(congress_yr, bill_ids, db_name):
 
             # Get sponsor info
             sponsor_data = soup.find('tr').get_text().strip('\n').split('.')
-            sponsor_name = "".join(sponsor_data[1].strip().split(','))
-            sponsor_party = sponsor_data[-1].strip()[1]
+
+            # Middle name not present
+            try:
+                sponsor_name = ("".join(sponsor_data[1].strip().split(','))
+                                .split('[')[0].strip())
+                sponsor_party = "".join(sponsor_data[1]).split('[')[1][0]
+            # Middle name present
+            except IndexError:
+                sponsor_name = ("".join(sponsor_data[1].strip().split(',')))
+                sponsor_party = sponsor_data[-1].strip()[1]
 
             # Get bill info
             bill_summary_data = soup.find('div', 
                                           id='bill-summary').find_all('p')
+            
+            if bill_summary_data == []:
+                bill_summary_data = soup.find('div',
+                                        id='bill-summary').find_all('h3')
+                
             bill_summary = []
             for idx, p in enumerate(bill_summary_data):
                 if idx == 0:
@@ -120,7 +135,12 @@ def scrape_congress(congress_yr, bill_ids, db_name):
 
 
 # Iterate through each congress
-# for congress in [113, 114, 115, 116, 117]:
+# for congress in [113, 114, 115, 116]:
 #     bill_ids = get_bill_ids(congress)
 #     scrape_congress(congress, bill_ids, 'congress.db')
+
+# bill_ids = get_bill_ids(117)
+# scrape_congress(117, bill_ids, 'congress.db') 
+# Estimated time 5.82 Hours
+# Start time: 9:30am
 
