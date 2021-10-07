@@ -17,6 +17,8 @@ def initailize_db(db_name):
     # Create table and columns: txt and action
     c.execute(
         """CREATE TABLE congress (
+                congress text,
+                hr_measure text,
                 sponsor_name text,
                 sponsor_party text,
                 bill_name text,
@@ -36,12 +38,12 @@ def insert_data(db_name, data):
     
     Arguments
     db_name : Name of database
-    data : A list a tuples (sponsor_name, sponsor_party, bill_name, bill_party)
+    data : A tuple (sponsor_name, sponsor_party, bill_name, bill_party)
     """
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
     with conn:
-        c.executemany("INSERT INTO congress VALUES (?,?)", data)
+        c.execute("INSERT INTO congress VALUES (?,?,?,?)", data)
     conn.close()
 
 
@@ -54,7 +56,7 @@ def db_head(db_name, n):
 
 
 # Initialize db
-initailize_db("congress.db")
+# initailize_db("congress.db")
 
 # Insert messages
 # insert_data("congress.db", data)
