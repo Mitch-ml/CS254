@@ -5,9 +5,6 @@ import requests
 from zipfile import ZipFile
 from bs4 import BeautifulSoup
 import pandas as pd
-# from requests.api import get
-
-# from Code.database_creation import insert_data
 
 # Change directory
 os.chdir(os.getcwd() + '/data')
@@ -33,20 +30,6 @@ def get_bill_ids(congress_yr):
     return sorted(bill_ids)
 
 
-# def extract_name_summary(bill_summary_data):
-#     """Extract the bill name and summary."""
-#     bill_summary = []
-#     for idx, p in enumerate(bill_summary_data):
-#         if idx == 0:
-#             bill_name = p.get_text()
-#         else:
-#             bill_summary.append(p.get_text())
-
-#     # Convert bill summary to single string
-#     bill_summary = "".join(bill_summary)
-#     return bill_name, bill_summary
-
-
 def scrape_congress(congress_yr, bill_ids, db_name):
     """Scrapes bill summary data from congress.gov. Exctracts the sponsor's 
     name, sponsor's party, bill name, and bill summary. 
@@ -63,8 +46,6 @@ def scrape_congress(congress_yr, bill_ids, db_name):
     # Iterate through all bills for each congress
     for id in bill_ids:
         # Format URL
-        # congress_yr = 117
-        # id = 105
         url = ("https://congress.gov/bill/{}th-congress"
                "/house-bill/{}/all-info").format(congress_yr, id)
 
@@ -79,21 +60,19 @@ def scrape_congress(congress_yr, bill_ids, db_name):
             # Get sponsor info
             sponsor_data = soup.find('tr').get_text().strip('\n').split('.')
 
-            # Middle name not present
+            # Handle sponsor's name
             try:
                 sponsor_name = ("".join(sponsor_data[1].strip().split(','))
                                 .split('[')[0].strip())
-                # sponsor_party = "".join(sponsor_data[1]).split('[')[1][0]
-            # Middle name present
+            # Handle sponspr's middle name 
             except IndexError:
                 try:
                     sponsor_name = ("".join(sponsor_data[1].strip().split(',')))
+                # Handle special names (i.e. commissioner)
                 except IndexError:
                     sponsor_name = "".join(sponsor_data).strip().split('[')[0].split('\n')[-1].strip()
             
             sponsor_party = "".join(sponsor_data[-1]).split('[')[1][0]
-            
-            # sponsor_name; sponsor_party
 
             # Get bill info (find all paragraphs)
             bill_summary_data = soup.find('div', 
@@ -102,15 +81,19 @@ def scrape_congress(congress_yr, bill_ids, db_name):
             # If bill_summary_data is not empty extract the bill name and summary
             if bill_summary_data != []:
                 try:
+                    # See if bill name is in bold
                     bill_name = [title.get_text() for title in soup.find('div', id='bill-summary').find_all('b')][0]
                 except IndexError:
                     try:
+                        # See if bill name is strong instead of bold 
                         bill_name = [title.get_text() for title in soup.find('div', id='bill-summary').find_all('strong')][0]
                     except IndexError:
+                        # No bill name present
                         pass
-                # If bill name is not bold try strong
-                # if bill_name == []:
+
+                # Get bill summary
                 bill_summary = [p.get_text() for p in soup.find('div', id='bill-summary').find_all('p')]
+
                 # If bill name is not empty remove duplicate value in bill summary
                 if bill_name in bill_summary:
                     del bill_summary[0]
@@ -118,24 +101,14 @@ def scrape_congress(congress_yr, bill_ids, db_name):
                 else:
                     bill_name = None
                     bill_summary = "".join(bill_summary)
-                # bill_name, bill_summary = extract_name_summary(bill_summary_data)
             
             # If there are no paragraphs look for text after headers
             else:
                 bill_name = None
                 bill_summary = soup.find('div', id='bill-summary').findChildren(text=True)[-1]
-                "".join(bill_summary)
+                bill_summary = "".join(bill_summary)
                 # bill_summary = soup.find('div', id='bill-summary').find('h3', class_='currentVersion').findNextSibling(text=True)
 
-            # bill_name; bill_summary
-            # bill_summary = []
-            # for idx, p in enumerate(bill_summary_data):
-            #     if idx == 0:
-            #         bill_name = p.get_text()
-            #     else:
-            #         bill_summary.append(p.get_text())
-
-                        
             data = (congress_yr, id, sponsor_name, sponsor_party, 
                     bill_name, bill_summary)
             
@@ -157,27 +130,17 @@ def scrape_congress(congress_yr, bill_ids, db_name):
     conn.close()
 
 
-# CHECK CODE
-# bill_ids = [1]
-# scrape_congress(117, bill_ids, 'congress.db')
-
 # conn = sqlite3.connect('congress.db')
 # c = conn.cursor()
 # c.execute("SELECT * FROM congress")
 # c.fetchall()
 # conn.close()
 
-
-
 # ESTIMATED RUN TIME: 44.53 HOURS
 # num_bills = sum([len(get_bill_ids(113)), len(get_bill_ids(114)),
 #                  len(get_bill_ids(115)), len(get_bill_ids(116)),
 #                  len(get_bill_ids(117))])
                        
-# single_iteration = 5  # seconds
-# print(f"Estimated run time is {round(num_bills*single_iteration/3600,2)} hours")
-
-
 # Iterate through each congress
 # for congress in [113, 114, 115, 116]:
 #     bill_ids = get_bill_ids(congress)
@@ -193,11 +156,8 @@ df = pd.read_sql_query("SELECT * from congress", conn)
 conn.close()
 df.tail()
 bill_ids[:100]
-# for i in range(10):
-#     print(df['bill_summary'][i])
-# Estimated time 5.82 Hours
-# Start time: 9:30am
 
+# DELETE DATABASE
 # conn = sqlite3.connect('congress.db')
 # c = conn.cursor()
 # c.execute("DELETE FROM congress")
