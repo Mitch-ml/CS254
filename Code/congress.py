@@ -4,7 +4,8 @@ import time
 import requests
 from zipfile import ZipFile
 from bs4 import BeautifulSoup
-from requests.api import get
+import pandas as pd
+# from requests.api import get
 
 # from Code.database_creation import insert_data
 
@@ -28,7 +29,22 @@ def get_bill_ids(congress_yr):
     # Remove all text except for bill number
     bill_ids = [name.replace('.xml','').replace(
                 'BILLSUM-{}hr'.format(congress_yr),'') for name in names]
-    return bill_ids
+    bill_ids = [int(name) for name in bill_ids]
+    return sorted(bill_ids)
+
+
+# def extract_name_summary(bill_summary_data):
+#     """Extract the bill name and summary."""
+#     bill_summary = []
+#     for idx, p in enumerate(bill_summary_data):
+#         if idx == 0:
+#             bill_name = p.get_text()
+#         else:
+#             bill_summary.append(p.get_text())
+
+#     # Convert bill summary to single string
+#     bill_summary = "".join(bill_summary)
+#     return bill_name, bill_summary
 
 
 def scrape_congress(congress_yr, bill_ids, db_name):
@@ -47,8 +63,8 @@ def scrape_congress(congress_yr, bill_ids, db_name):
     # Iterate through all bills for each congress
     for id in bill_ids:
         # Format URL
-        congress_yr = 117
-        id = 91
+        # congress_yr = 117
+        # id = 105
         url = ("https://congress.gov/bill/{}th-congress"
                "/house-bill/{}/all-info").format(congress_yr, id)
 
@@ -67,29 +83,58 @@ def scrape_congress(congress_yr, bill_ids, db_name):
             try:
                 sponsor_name = ("".join(sponsor_data[1].strip().split(','))
                                 .split('[')[0].strip())
-                sponsor_party = "".join(sponsor_data[1]).split('[')[1][0]
+                # sponsor_party = "".join(sponsor_data[1]).split('[')[1][0]
             # Middle name present
             except IndexError:
-                sponsor_name = ("".join(sponsor_data[1].strip().split(',')))
-                sponsor_party = sponsor_data[-1].strip()[1]
+                try:
+                    sponsor_name = ("".join(sponsor_data[1].strip().split(',')))
+                except IndexError:
+                    sponsor_name = "".join(sponsor_data).strip().split('[')[0].split('\n')[-1].strip()
+            
+            sponsor_party = "".join(sponsor_data[-1]).split('[')[1][0]
+            
+            # sponsor_name; sponsor_party
 
-            # Get bill info
+            # Get bill info (find all paragraphs)
             bill_summary_data = soup.find('div', 
                                           id='bill-summary').find_all('p')
             
-            if bill_summary_data == []:
-                bill_summary_data = soup.find('div',
-                                        id='bill-summary').find_all('h3')
-                
-            bill_summary = []
-            for idx, p in enumerate(bill_summary_data):
-                if idx == 0:
-                    bill_name = p.get_text()
+            # If bill_summary_data is not empty extract the bill name and summary
+            if bill_summary_data != []:
+                try:
+                    bill_name = [title.get_text() for title in soup.find('div', id='bill-summary').find_all('b')][0]
+                except IndexError:
+                    try:
+                        bill_name = [title.get_text() for title in soup.find('div', id='bill-summary').find_all('strong')][0]
+                    except IndexError:
+                        pass
+                # If bill name is not bold try strong
+                # if bill_name == []:
+                bill_summary = [p.get_text() for p in soup.find('div', id='bill-summary').find_all('p')]
+                # If bill name is not empty remove duplicate value in bill summary
+                if bill_name in bill_summary:
+                    del bill_summary[0]
+                    bill_summary = "".join(bill_summary)
                 else:
-                    bill_summary.append(p.get_text())
+                    bill_name = None
+                    bill_summary = "".join(bill_summary)
+                # bill_name, bill_summary = extract_name_summary(bill_summary_data)
+            
+            # If there are no paragraphs look for text after headers
+            else:
+                bill_name = None
+                bill_summary = soup.find('div', id='bill-summary').findChildren(text=True)[-1]
+                "".join(bill_summary)
+                # bill_summary = soup.find('div', id='bill-summary').find('h3', class_='currentVersion').findNextSibling(text=True)
 
-            # Convert bill summary to single string
-            bill_summary = "".join(bill_summary)
+            # bill_name; bill_summary
+            # bill_summary = []
+            # for idx, p in enumerate(bill_summary_data):
+            #     if idx == 0:
+            #         bill_name = p.get_text()
+            #     else:
+            #         bill_summary.append(p.get_text())
+
                         
             data = (congress_yr, id, sponsor_name, sponsor_party, 
                     bill_name, bill_summary)
@@ -120,9 +165,8 @@ def scrape_congress(congress_yr, bill_ids, db_name):
 # c = conn.cursor()
 # c.execute("SELECT * FROM congress")
 # c.fetchall()
-# c.execute("DELETE FROM congress WHERE id = (SELECT MAX(id) FROM congress)")
-# conn.commit()
 # conn.close()
+
 
 
 # ESTIMATED RUN TIME: 44.53 HOURS
@@ -139,8 +183,23 @@ def scrape_congress(congress_yr, bill_ids, db_name):
 #     bill_ids = get_bill_ids(congress)
 #     scrape_congress(congress, bill_ids, 'congress.db')
 
-# bill_ids = get_bill_ids(117)
-# scrape_congress(117, bill_ids, 'congress.db') 
+bill_ids = get_bill_ids(117)
+scrape_congress(117, bill_ids[89:100], 'congress.db') 
+# start time: 13:00
+# Estimated finish 17:00
+
+conn = sqlite3.connect('congress.db')
+df = pd.read_sql_query("SELECT * from congress", conn)
+conn.close()
+df.tail()
+bill_ids[:100]
+# for i in range(10):
+#     print(df['bill_summary'][i])
 # Estimated time 5.82 Hours
 # Start time: 9:30am
 
+# conn = sqlite3.connect('congress.db')
+# c = conn.cursor()
+# c.execute("DELETE FROM congress")
+# conn.commit()
+# conn.close()
