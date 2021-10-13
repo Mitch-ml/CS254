@@ -88,7 +88,7 @@ def scrape_congress(congress_yr, bill_ids, db_name):
                         bill_name = [title.get_text() for title in soup.find('div', id='bill-summary').find_all('strong')][0]
                     except IndexError:
                         # No bill name present
-                        pass
+                        bill_name = None
 
                 # Get bill summary
                 bill_summary = [p.get_text() for p in soup.find('div', id='bill-summary').find_all('p')]
@@ -145,9 +145,9 @@ def scrape_congress(congress_yr, bill_ids, db_name):
 #     bill_ids = get_bill_ids(congress)
 #     scrape_congress(congress, bill_ids, 'congress.db')
 
-CONGRESS_YR = 116
+CONGRESS_YR = 115
 bill_ids = get_bill_ids(CONGRESS_YR)
-scrape_congress(CONGRESS_YR, bill_ids, 'congress.db') 
+# scrape_congress(CONGRESS_YR, bill_ids, 'congress.db') 
 # start time: 10:24 (116)
 # Estimated finish 22:24
 # Actual Finish time: 20:36
