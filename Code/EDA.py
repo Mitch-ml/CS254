@@ -33,7 +33,6 @@ plt.title('Number of bills passed by individual members of house'.title())
 plt.xlabel('House Member')
 plt.ylabel('Number of bills passed')
 plt.scatter(np.arange(bill_count.shape[0]), bill_count['num_bills'],
-        color=bill_count['sponsor_party'].map({'R': 'r', 'D': 'b'}),
+        color=bill_count['sponsor_party'].map({'R': 'r', 'D': 'b', 'L': 'orange', 'I': 'g'}),
         alpha=0.4)
 plt.show();
-
