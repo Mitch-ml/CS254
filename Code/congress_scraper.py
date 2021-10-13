@@ -4,7 +4,6 @@ import time
 import requests
 from zipfile import ZipFile
 from bs4 import BeautifulSoup
-import pandas as pd
 
 # Change directory
 os.chdir(os.getcwd() + '/data')
@@ -146,10 +145,12 @@ def scrape_congress(congress_yr, bill_ids, db_name):
 #     bill_ids = get_bill_ids(congress)
 #     scrape_congress(congress, bill_ids, 'congress.db')
 
-bill_ids = get_bill_ids(117)
-scrape_congress(117, bill_ids, 'congress.db') 
-# start time: 19:50
-# Estimated finish 2:00
+CONGRESS_YR = 116
+bill_ids = get_bill_ids(CONGRESS_YR)
+scrape_congress(CONGRESS_YR, bill_ids, 'congress.db') 
+# start time: 10:24 (116)
+# Estimated finish 22:24
+# Actual Finish time: 20:36
 
 # conn = sqlite3.connect('congress.db')
 # df = pd.read_sql_query("SELECT * from congress", conn)
