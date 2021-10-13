@@ -145,11 +145,11 @@ def scrape_congress(congress_yr, bill_ids, db_name):
 #     bill_ids = get_bill_ids(congress)
 #     scrape_congress(congress, bill_ids, 'congress.db')
 
-CONGRESS_YR = 115
-bill_ids = get_bill_ids(CONGRESS_YR)
-# scrape_congress(CONGRESS_YR, bill_ids, 'congress.db') 
-# start time: 10:24 (116)
-# Estimated finish 22:24
+CONGRESS_YR = 114
+bill_ids = get_bill_ids(CONGRESS_YR)  #6526, 5885
+scrape_congress(CONGRESS_YR, bill_ids, 'congress.db') 
+# start time: 9:09 (115)
+# Estimated finish 11:39
 # Actual Finish time: 20:36
 
 # conn = sqlite3.connect('congress.db')
