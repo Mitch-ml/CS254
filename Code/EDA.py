@@ -14,7 +14,7 @@ conn.close()
 df = congress.copy()
 
 # Visualize proportion of bills by party
-plt.title('117th Congress')
+plt.title('Number of bills proposed by party')
 plt.xlabel('Sponsor party affiliation')
 plt.ylabel('Number of bills proposed')
 plt.bar(df['sponsor_party'].value_counts().index.values,
