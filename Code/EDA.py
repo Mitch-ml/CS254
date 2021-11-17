@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 # Load data
 os.chdir(os.getcwd() + '/data')
 conn = sqlite3.connect('congress.db')
-congress = pd.read_sql_query("SELECT * FROM congress WHERE congress=114", conn)
-# congress = pd.read_sql_query("SELECT * FROM congress", conn)
+# congress = pd.read_sql_query("SELECT * FROM congress WHERE congress=114", conn)
+congress = pd.read_sql_query("SELECT * FROM congress", conn)
 conn.close()
 
 # Make copy of data for working
